@@ -33,10 +33,10 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 router.post('/', (req: Request, res: Response) => {
-  const { name, description, snippet } = req.body;
+  const { name, description, snippet, category, dependencies, usage } = req.body;
 
-  if (!name || !description || !snippet) {
-    return res.status(400).send('Missing required fields: name, description, snippet');
+  if (!name || !description || !snippet || !category || !dependencies || !usage) {
+    return res.status(400).send('Missing required fields');
   }
 
   const data = readData();
@@ -45,10 +45,57 @@ router.post('/', (req: Request, res: Response) => {
     name,
     description,
     snippet,
+    category,
+    dependencies,
+    usage,
   };
   data.components.push(newComponent);
   writeData(data);
   res.status(201).json(newComponent);
+});
+
+router.put('/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, description, snippet, category, dependencies, usage } = req.body;
+
+  if (!name || !description || !snippet || !category || !dependencies || !usage) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  const data = readData();
+  const componentIndex = data.components.findIndex(c => c.id === id);
+
+  if (componentIndex === -1) {
+    return res.status(404).send('Component not found');
+  }
+
+  const updatedComponent: Component = {
+    id,
+    name,
+    description,
+    snippet,
+    category,
+    dependencies,
+    usage,
+  };
+
+  data.components[componentIndex] = updatedComponent;
+  writeData(data);
+  res.json(updatedComponent);
+});
+
+router.delete('/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const data = readData();
+  const componentIndex = data.components.findIndex(c => c.id === id);
+
+  if (componentIndex === -1) {
+    return res.status(404).send('Component not found');
+  }
+
+  data.components.splice(componentIndex, 1);
+  writeData(data);
+  res.status(204).send();
 });
 
 export default router;

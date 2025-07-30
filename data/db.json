@@ -4,13 +4,10 @@
       "id": "button",
       "name": "Button",
       "description": "A simple button component.",
-      "snippet": "<button>Click me</button>"
-    },
-    {
-      "id": "f20f1af1-8826-4a83-88ba-c13889ade5c4",
-      "name": "Card",
-      "description": "A card component",
-      "snippet": "<div>Card</div>"
+      "snippet": "<button>Click me</button>",
+      "category": "UI",
+      "dependencies": [],
+      "usage": "<Button>Click me</Button>"
     }
   ],
   "apis": [
@@ -19,14 +16,10 @@
       "name": "Get Users",
       "description": "Retrieves a list of users.",
       "endpoint": "/api/users",
-      "method": "GET"
-    },
-    {
-      "id": "b3ec4436-1c8b-4318-be40-2c9c38f94b27",
-      "name": "Create User",
-      "description": "Creates a new user.",
-      "endpoint": "/api/users",
-      "method": "POST"
+      "method": "GET",
+      "parameters": "None",
+      "requestBody": "None",
+      "responseBody": "Array of user objects"
     }
   ]
 }

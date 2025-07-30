@@ -3,6 +3,9 @@ export interface Component {
   name: string;
   description: string;
   snippet: string;
+  category: string;
+  dependencies: string[];
+  usage: string;
 }
 
 export interface API {
@@ -11,6 +14,9 @@ export interface API {
   description: string;
   endpoint: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  parameters: string;
+  requestBody: string;
+  responseBody: string;
 }
 
 export interface DB {
