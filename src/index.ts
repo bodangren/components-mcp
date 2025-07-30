@@ -78,6 +78,25 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/events', (req, res) => {
+  // Set headers for SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); // Flush the headers to establish the connection
+
+  // Send a data event to keep the connection open
+  const keepAliveInterval = setInterval(() => {
+    res.write(`data: ${new Date().toISOString()}\n\n`);
+  }, 15000); // Every 15 seconds
+
+  // When the client closes the connection, stop the interval
+  req.on('close', () => {
+    clearInterval(keepAliveInterval);
+    res.end();
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
