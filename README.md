@@ -4,18 +4,57 @@ This project is a dedicated knowledge-base server. Its primary purpose is to pro
 
 ## Features
 
-- **Components API**: Manage information about reusable Next.js components.
-  - `GET /components`: Retrieve all components.
-  - `GET /components/:id`: Retrieve a specific component by ID.
-  - `POST /components`: Add a new component.
-  - `PUT /components/:id`: Update an existing component.
-  - `DELETE /components/:id`: Delete a component.
+- **Code Conventions API**: Manage information about code conventions.
+  - `GET /conventions`: Get all code conventions.
+  - `POST /conventions`: Add a new code convention.
+  - `PUT /conventions/{id}`: Update a code convention by ID.
+  - `DELETE /conventions/{id}`: Delete a code convention by ID.
+- **Custom Hooks API**: Manage information about custom hooks.
+  - `GET /hooks`: Get all custom hooks.
+  - `POST /hooks`: Add a new custom hook.
+  - `PUT /hooks/{id}`: Update a custom hook by ID.
+  - `DELETE /hooks/{id}`: Delete a custom hook by ID.
+- **Environment Variables API**: Manage information about environment variables.
+  - `GET /environment`: Get all environment variables.
+  - `POST /environment`: Add a new environment variable.
+  - `PUT /environment/{id}`: Update an environment variable by ID.
+  - `DELETE /environment/{id}`: Delete an environment variable by ID.
+- **State Management API**: Manage information about state management configurations.
+  - `GET /state`: Get all state management configurations.
+  - `POST /state`: Add a new state management configuration.
+  - `PUT /state/{id}`: Update a state management configuration by ID.
+  - `DELETE /state/{id}`: Delete a state management configuration by ID.
+- **Styling API**: Manage information about styling configurations.
+  - `GET /styling`: Get all styling configurations.
+  - `POST /styling`: Add a new styling configuration.
+  - `PUT /styling/{id}`: Update a styling configuration by ID.
+  - `DELETE /styling/{id}`: Delete a styling configuration by ID.
 - **APIs API**: Manage information about available APIs.
-  - `GET /apis`: Retrieve all APIs.
-  - `GET /apis/:id`: Retrieve a specific API by ID.
-  - `POST /apis`: Add a new API.
-  - `PUT /apis/:id`: Update an existing API.
-  - `DELETE /apis/:id`: Delete an API.
+  - `GET /apis`: Retrieve a list of APIs.
+  - `POST /apis`: Create a new API.
+  - `GET /apis/{id}`: Retrieve a single API by ID.
+  - `PUT /apis/{id}`: Update an API by ID.
+  - `DELETE /apis/{id}`: Delete an API.
+- **Components API**: Manage information about reusable Next.js components.
+  - `GET /components`: Retrieve a list of components.
+  - `POST /components`: Create a new component.
+  - `GET /components/{id}`: Retrieve a single component by ID.
+  - `PUT /components/{id}`: Update a component by ID.
+  - `DELETE /components/{id}`: Delete a component.
+
+## Schemas
+
+- `IEnvironmentVar`
+- `IStyling`
+- `IStateManagement`
+- `ICustomHook`
+- `ICodeConvention`
+- `API`
+- `APIInput`
+- `Component`
+- `ComponentSummary`
+- `ComponentInput`
+
 - **Root Endpoint Documentation**: A `/` endpoint provides an overview of all available API endpoints.
 
 ## Project Structure
