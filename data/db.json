@@ -1,5 +1,12 @@
 {
-  "components": [],
+  "components": [
+    {
+      "id": "1753868192855bv2qe6zpw",
+      "name": "TestComponent",
+      "description": "Test component",
+      "filePath": "./test.js"
+    }
+  ],
   "apis": [],
   "environment": [],
   "style-guide": [],

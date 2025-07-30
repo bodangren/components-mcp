@@ -1,44 +1,26 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs').promises;
-const path = require('path');
-const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+#!/usr/bin/env node
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'data', 'db.json');
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  ListResourcesRequestSchema,
+  ListToolsRequestSchema,
+  McpError,
+  ReadResourceRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+import fs from 'fs/promises';
+import path from 'path';
 
-app.use(cors());
-app.use(express.json());
+const DB_PATH = path.join(process.cwd(), 'data', 'db.json');
 
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Components MCP API',
-      version: '1.0.5',
-      description: 'Master Control Program server for managing project components, APIs, and coding standards',
-    },
-    servers: [
-      {
-        url: `http://localhost:${PORT}`,
-        description: 'Development server',
-      },
-    ],
-  },
-  apis: ['./server.js'],
-};
-
-const specs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-
+// Database operations
 async function readDB() {
   try {
     const data = await fs.readFile(DB_PATH, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error reading database:', error);
     return {
       components: [],
       apis: [],
@@ -53,6 +35,8 @@ async function readDB() {
 
 async function writeDB(data) {
   try {
+    // Ensure data directory exists
+    await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
     await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error writing database:', error);
@@ -64,789 +48,478 @@ function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
-/**
- * @swagger
- * /:
- *   get:
- *     summary: Welcome message and endpoint summary
- *     responses:
- *       200:
- *         description: Welcome message with available endpoints
- */
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Components MCP API',
-    version: '1.0.5',
-    endpoints: {
-      components: '/components',
-      apis: '/apis',
-      environment: '/environment',
-      styleGuide: '/style-guide',
-      state: '/state',
-      hooks: '/hooks',
-      conventions: '/conventions',
-      documentation: '/api-docs'
-    }
-  });
-});
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Component:
- *       type: object
- *       required:
- *         - name
- *         - description
- *         - filePath
- *       properties:
- *         id:
- *           type: string
- *           description: Unique identifier
- *         name:
- *           type: string
- *           description: Component name
- *         description:
- *           type: string
- *           description: Component description
- *         filePath:
- *           type: string
- *           description: Path to component file
- *         usageExample:
- *           type: string
- *           description: Usage example code
- *     Api:
- *       type: object
- *       required:
- *         - name
- *         - endpoint
- *         - method
- *         - description
- *       properties:
- *         id:
- *           type: string
- *           description: Unique identifier
- *         name:
- *           type: string
- *           description: API name
- *         endpoint:
- *           type: string
- *           description: API endpoint path
- *         method:
- *           type: string
- *           enum: [GET, POST, PUT, DELETE, PATCH]
- *           description: HTTP method
- *         description:
- *           type: string
- *           description: API description
- *         requestBody:
- *           type: object
- *           description: Request body structure
- *         responseBody:
- *           type: object
- *           description: Response body structure
- *     StyleGuidePattern:
- *       type: object
- *       required:
- *         - element
- *         - description
- *         - className
- *       properties:
- *         id:
- *           type: string
- *         element:
- *           type: string
- *         description:
- *           type: string
- *         className:
- *           type: string
- *         usageExample:
- *           type: string
- *     EnvironmentVariable:
- *       type: object
- *       required:
- *         - name
- *         - description
- *         - isPublic
- *       properties:
- *         id:
- *           type: string
- *         name:
- *           type: string
- *         description:
- *           type: string
- *         isPublic:
- *           type: boolean
- *     StateManagement:
- *       type: object
- *       required:
- *         - library
- *         - storeDirectory
- *         - usagePattern
- *       properties:
- *         id:
- *           type: string
- *         library:
- *           type: string
- *         storeDirectory:
- *           type: string
- *         usagePattern:
- *           type: string
- *     CustomHook:
- *       type: object
- *       required:
- *         - name
- *         - filePath
- *         - description
- *         - usage
- *       properties:
- *         id:
- *           type: string
- *         name:
- *           type: string
- *         filePath:
- *           type: string
- *         description:
- *           type: string
- *         usage:
- *           type: string
- *     Convention:
- *       type: object
- *       required:
- *         - rule
- *         - description
- *       properties:
- *         id:
- *           type: string
- *         rule:
- *           type: string
- *         description:
- *           type: string
- *     Error:
- *       type: object
- *       properties:
- *         error:
- *           type: string
- *           description: Error message
- *     Success:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           description: Success message
- */
-
-function createCRUDRoutes(entityName, entityKey) {
-  const capitalizedEntity = entityName.charAt(0).toUpperCase() + entityName.slice(1);
-  const schemaName = entityKey === 'components' ? 'Component' :
-                     entityKey === 'apis' ? 'Api' :
-                     entityKey === 'style-guide' ? 'StyleGuidePattern' :
-                     entityKey === 'environment' ? 'EnvironmentVariable' :
-                     entityKey === 'state' ? 'StateManagement' :
-                     entityKey === 'hooks' ? 'CustomHook' :
-                     entityKey === 'conventions' ? 'Convention' : 'Object';
-
-  app.get(`/${entityName}`, async (req, res) => {
-    try {
-      const db = await readDB();
-      const entities = db[entityKey] || [];
-      
-      if (entityKey === 'components') {
-        const summary = entities.map(({ id, name, description }) => ({
-          id, name, description
-        }));
-        res.json(summary);
-      } else if (entityKey === 'apis') {
-        const summary = entities.map(({ id, name, description }) => ({
-          id, name, description
-        }));
-        res.json(summary);
-      } else {
-        res.json(entities);
+class ComponentsServer {
+  constructor() {
+    this.server = new Server(
+      {
+        name: 'components-mcp',
+        version: '1.0.5',
+      },
+      {
+        capabilities: {
+          resources: {},
+          tools: {},
+        },
       }
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+    );
 
-  app.get(`/${entityName}/:id`, async (req, res) => {
-    try {
-      const db = await readDB();
-      const entities = db[entityKey] || [];
-      const entity = entities.find(item => item.id === req.params.id);
-      
-      if (!entity) {
-        return res.status(404).json({ error: `${entityName} not found` });
-      }
-      
-      res.json(entity);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+    this.setupToolHandlers();
+    this.setupResourceHandlers();
+    
+    // Error handling
+    this.server.onerror = (error) => console.error('[MCP Error]', error);
+    process.on('SIGINT', async () => {
+      await this.server.close();
+      process.exit(0);
+    });
+  }
 
-  app.post(`/${entityName}`, async (req, res) => {
-    try {
+  setupResourceHandlers() {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       const db = await readDB();
-      const entities = db[entityKey] || [];
-      
-      const newEntity = {
-        id: generateId(),
-        ...req.body
+      const resources = [];
+
+      // Add summary resources for each entity type
+      Object.keys(db).forEach(entityType => {
+        resources.push({
+          uri: `components-mcp://${entityType}`,
+          name: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} List`,
+          description: `List of all ${entityType}`,
+          mimeType: 'application/json',
+        });
+      });
+
+      return {
+        resources,
       };
-      
-      entities.push(newEntity);
-      db[entityKey] = entities;
-      
-      await writeDB(db);
-      res.status(201).json(newEntity);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+    });
 
-  app.put(`/${entityName}/:id`, async (req, res) => {
-    try {
-      const db = await readDB();
-      const entities = db[entityKey] || [];
-      const index = entities.findIndex(item => item.id === req.params.id);
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params;
+      const match = uri.match(/^components-mcp:\/\/(.+)/);
       
-      if (index === -1) {
-        return res.status(404).json({ error: `${entityName} not found` });
+      if (!match) {
+        throw new McpError(ErrorCode.InvalidRequest, `Invalid resource URI: ${uri}`);
       }
-      
-      entities[index] = { ...entities[index], ...req.body, id: req.params.id };
-      await writeDB(db);
-      res.json(entities[index]);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
 
-  app.delete(`/${entityName}/:id`, async (req, res) => {
-    try {
+      const entityType = match[1];
       const db = await readDB();
-      const entities = db[entityKey] || [];
-      const index = entities.findIndex(item => item.id === req.params.id);
-      
-      if (index === -1) {
-        return res.status(404).json({ error: `${entityName} not found` });
+
+      if (!db[entityType]) {
+        throw new McpError(ErrorCode.InvalidRequest, `Unknown entity type: ${entityType}`);
       }
-      
-      entities.splice(index, 1);
-      db[entityKey] = entities;
-      
-      await writeDB(db);
-      res.json({ message: `${entityName} deleted successfully` });
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'application/json',
+            text: JSON.stringify(db[entityType], null, 2),
+          },
+        ],
+      };
+    });
+  }
+
+  setupToolHandlers() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      return {
+        tools: [
+          {
+            name: 'get_components',
+            description: 'Get all components or a specific component by ID',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional component ID to get specific component',
+                },
+              },
+            },
+          },
+          {
+            name: 'create_component',
+            description: 'Create a new component',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Component name' },
+                description: { type: 'string', description: 'Component description' },
+                filePath: { type: 'string', description: 'Path to component file' },
+                usageExample: { type: 'string', description: 'Usage example code' },
+              },
+              required: ['name', 'description', 'filePath'],
+            },
+          },
+          {
+            name: 'update_component',
+            description: 'Update an existing component',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'Component ID' },
+                name: { type: 'string', description: 'Component name' },
+                description: { type: 'string', description: 'Component description' },
+                filePath: { type: 'string', description: 'Path to component file' },
+                usageExample: { type: 'string', description: 'Usage example code' },
+              },
+              required: ['id'],
+            },
+          },
+          {
+            name: 'delete_component',
+            description: 'Delete a component',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'Component ID' },
+              },
+              required: ['id'],
+            },
+          },
+          {
+            name: 'get_apis',
+            description: 'Get all APIs or a specific API by ID',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional API ID to get specific API',
+                },
+              },
+            },
+          },
+          {
+            name: 'create_api',
+            description: 'Create a new API',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'API name' },
+                endpoint: { type: 'string', description: 'API endpoint path' },
+                method: { 
+                  type: 'string', 
+                  enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+                  description: 'HTTP method' 
+                },
+                description: { type: 'string', description: 'API description' },
+                requestBody: { type: 'object', description: 'Request body structure' },
+                responseBody: { type: 'object', description: 'Response body structure' },
+              },
+              required: ['name', 'endpoint', 'method', 'description'],
+            },
+          },
+          {
+            name: 'update_api',
+            description: 'Update an existing API',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'API ID' },
+                name: { type: 'string', description: 'API name' },
+                endpoint: { type: 'string', description: 'API endpoint path' },
+                method: { 
+                  type: 'string', 
+                  enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+                  description: 'HTTP method' 
+                },
+                description: { type: 'string', description: 'API description' },
+                requestBody: { type: 'object', description: 'Request body structure' },
+                responseBody: { type: 'object', description: 'Response body structure' },
+              },
+              required: ['id'],
+            },
+          },
+          {
+            name: 'delete_api',
+            description: 'Delete an API',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'API ID' },
+              },
+              required: ['id'],
+            },
+          },
+          {
+            name: 'get_environment',
+            description: 'Get all environment variables or a specific one by ID',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional environment variable ID to get specific variable',
+                },
+              },
+            },
+          },
+          {
+            name: 'create_environment',
+            description: 'Create a new environment variable',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                name: { type: 'string', description: 'Environment variable name' },
+                description: { type: 'string', description: 'Variable description' },
+                isPublic: { type: 'boolean', description: 'Whether variable is public' },
+              },
+              required: ['name', 'description', 'isPublic'],
+            },
+          },
+          {
+            name: 'get_style_guide',
+            description: 'Get all style guide patterns or a specific one by ID',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional style guide pattern ID',
+                },
+              },
+            },
+          },
+          {
+            name: 'create_style_guide',
+            description: 'Create a new style guide pattern',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                element: { type: 'string', description: 'UI element name' },
+                description: { type: 'string', description: 'Pattern description' },
+                className: { type: 'string', description: 'CSS class name' },
+                usageExample: { type: 'string', description: 'Usage example' },
+              },
+              required: ['element', 'description', 'className'],
+            },
+          },
+          {
+            name: 'get_state',
+            description: 'Get all state management configurations',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional state management ID',
+                },
+              },
+            },
+          },
+          {
+            name: 'get_hooks',
+            description: 'Get all custom hooks',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional hook ID',
+                },
+              },
+            },
+          },
+          {
+            name: 'get_conventions',
+            description: 'Get all coding conventions',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Optional convention ID',
+                },
+              },
+            },
+          },
+        ],
+      };
+    });
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+
+      try {
+        const db = await readDB();
+
+        switch (name) {
+          case 'get_components':
+            if (args.id) {
+              const component = db.components.find(c => c.id === args.id);
+              if (!component) {
+                throw new McpError(ErrorCode.InvalidRequest, 'Component not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(component, null, 2) }] };
+            }
+            return { 
+              content: [{ 
+                type: 'text', 
+                text: JSON.stringify(db.components.map(({ id, name, description }) => ({
+                  id, name, description
+                })), null, 2) 
+              }] 
+            };
+
+          case 'create_component':
+            const newComponent = {
+              id: generateId(),
+              ...args
+            };
+            db.components.push(newComponent);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `Component created: ${JSON.stringify(newComponent, null, 2)}` }] };
+
+          case 'update_component':
+            const componentIndex = db.components.findIndex(c => c.id === args.id);
+            if (componentIndex === -1) {
+              throw new McpError(ErrorCode.InvalidRequest, 'Component not found');
+            }
+            db.components[componentIndex] = { ...db.components[componentIndex], ...args };
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `Component updated: ${JSON.stringify(db.components[componentIndex], null, 2)}` }] };
+
+          case 'delete_component':
+            const deleteIndex = db.components.findIndex(c => c.id === args.id);
+            if (deleteIndex === -1) {
+              throw new McpError(ErrorCode.InvalidRequest, 'Component not found');
+            }
+            db.components.splice(deleteIndex, 1);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: 'Component deleted successfully' }] };
+
+          case 'get_apis':
+            if (args.id) {
+              const api = db.apis.find(a => a.id === args.id);
+              if (!api) {
+                throw new McpError(ErrorCode.InvalidRequest, 'API not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(api, null, 2) }] };
+            }
+            return { 
+              content: [{ 
+                type: 'text', 
+                text: JSON.stringify(db.apis.map(({ id, name, description, endpoint, method }) => ({
+                  id, name, description, endpoint, method
+                })), null, 2) 
+              }] 
+            };
+
+          case 'create_api':
+            const newApi = {
+              id: generateId(),
+              ...args
+            };
+            db.apis.push(newApi);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `API created: ${JSON.stringify(newApi, null, 2)}` }] };
+
+          case 'update_api':
+            const apiIndex = db.apis.findIndex(a => a.id === args.id);
+            if (apiIndex === -1) {
+              throw new McpError(ErrorCode.InvalidRequest, 'API not found');
+            }
+            db.apis[apiIndex] = { ...db.apis[apiIndex], ...args };
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `API updated: ${JSON.stringify(db.apis[apiIndex], null, 2)}` }] };
+
+          case 'delete_api':
+            const apiDeleteIndex = db.apis.findIndex(a => a.id === args.id);
+            if (apiDeleteIndex === -1) {
+              throw new McpError(ErrorCode.InvalidRequest, 'API not found');
+            }
+            db.apis.splice(apiDeleteIndex, 1);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: 'API deleted successfully' }] };
+
+          case 'get_environment':
+            if (args.id) {
+              const env = db.environment.find(e => e.id === args.id);
+              if (!env) {
+                throw new McpError(ErrorCode.InvalidRequest, 'Environment variable not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(env, null, 2) }] };
+            }
+            return { content: [{ type: 'text', text: JSON.stringify(db.environment, null, 2) }] };
+
+          case 'create_environment':
+            const newEnv = {
+              id: generateId(),
+              ...args
+            };
+            db.environment.push(newEnv);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `Environment variable created: ${JSON.stringify(newEnv, null, 2)}` }] };
+
+          case 'get_style_guide':
+            if (args.id) {
+              const pattern = db['style-guide'].find(p => p.id === args.id);
+              if (!pattern) {
+                throw new McpError(ErrorCode.InvalidRequest, 'Style guide pattern not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(pattern, null, 2) }] };
+            }
+            return { content: [{ type: 'text', text: JSON.stringify(db['style-guide'], null, 2) }] };
+
+          case 'create_style_guide':
+            const newPattern = {
+              id: generateId(),
+              ...args
+            };
+            db['style-guide'].push(newPattern);
+            await writeDB(db);
+            return { content: [{ type: 'text', text: `Style guide pattern created: ${JSON.stringify(newPattern, null, 2)}` }] };
+
+          case 'get_state':
+            if (args.id) {
+              const state = db.state.find(s => s.id === args.id);
+              if (!state) {
+                throw new McpError(ErrorCode.InvalidRequest, 'State management not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(state, null, 2) }] };
+            }
+            return { content: [{ type: 'text', text: JSON.stringify(db.state, null, 2) }] };
+
+          case 'get_hooks':
+            if (args.id) {
+              const hook = db.hooks.find(h => h.id === args.id);
+              if (!hook) {
+                throw new McpError(ErrorCode.InvalidRequest, 'Hook not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(hook, null, 2) }] };
+            }
+            return { content: [{ type: 'text', text: JSON.stringify(db.hooks, null, 2) }] };
+
+          case 'get_conventions':
+            if (args.id) {
+              const convention = db.conventions.find(c => c.id === args.id);
+              if (!convention) {
+                throw new McpError(ErrorCode.InvalidRequest, 'Convention not found');
+              }
+              return { content: [{ type: 'text', text: JSON.stringify(convention, null, 2) }] };
+            }
+            return { content: [{ type: 'text', text: JSON.stringify(db.conventions, null, 2) }] };
+
+          default:
+            throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+        }
+      } catch (error) {
+        if (error instanceof McpError) {
+          throw error;
+        }
+        throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error.message}`);
+      }
+    });
+  }
+
+  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error('Components MCP server running on stdio');
+  }
 }
 
-// Components endpoints
-/**
- * @swagger
- * /components:
- *   get:
- *     summary: Get all components
- *     description: Retrieve a list of all components
- *     tags: [Components]
- *     responses:
- *       200:
- *         description: List of components
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Component'
- *   post:
- *     summary: Create a component
- *     description: Create a new component
- *     tags: [Components]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Component'
- *     responses:
- *       201:
- *         description: Component created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Component'
- * /components/{id}:
- *   get:
- *     summary: Get component by ID
- *     tags: [Components]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Component details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Component'
- *       404:
- *         description: Component not found
- *   put:
- *     summary: Update component
- *     tags: [Components]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Component'
- *     responses:
- *       200:
- *         description: Component updated
- *   delete:
- *     summary: Delete component
- *     tags: [Components]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Component deleted
- */
-
-/**
- * @swagger
- * /apis:
- *   get:
- *     summary: Get all APIs
- *     tags: [APIs]
- *     responses:
- *       200:
- *         description: List of APIs
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Api'
- *   post:
- *     summary: Create an API
- *     tags: [APIs]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Api'
- *     responses:
- *       201:
- *         description: API created
- * /apis/{id}:
- *   get:
- *     summary: Get API by ID
- *     tags: [APIs]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: API details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Api'
- *   put:
- *     summary: Update API
- *     tags: [APIs]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Api'
- *     responses:
- *       200:
- *         description: API updated
- *   delete:
- *     summary: Delete API
- *     tags: [APIs]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: API deleted
- */
-
-/**
- * @swagger
- * /environment:
- *   get:
- *     summary: Get all environment variables
- *     tags: [Environment]
- *     responses:
- *       200:
- *         description: List of environment variables
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/EnvironmentVariable'
- *   post:
- *     summary: Create environment variable
- *     tags: [Environment]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/EnvironmentVariable'
- *     responses:
- *       201:
- *         description: Environment variable created
- * /environment/{id}:
- *   get:
- *     summary: Get environment variable by ID
- *     tags: [Environment]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Environment variable details
- *   put:
- *     summary: Update environment variable
- *     tags: [Environment]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Environment variable updated
- *   delete:
- *     summary: Delete environment variable
- *     tags: [Environment]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Environment variable deleted
- */
-
-/**
- * @swagger
- * /style-guide:
- *   get:
- *     summary: Get all style guide patterns
- *     tags: [Style Guide]
- *     responses:
- *       200:
- *         description: List of style guide patterns
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/StyleGuidePattern'
- *   post:
- *     summary: Create style guide pattern
- *     tags: [Style Guide]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/StyleGuidePattern'
- *     responses:
- *       201:
- *         description: Style guide pattern created
- * /style-guide/{id}:
- *   get:
- *     summary: Get style guide pattern by ID
- *     tags: [Style Guide]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Style guide pattern details
- *   put:
- *     summary: Update style guide pattern
- *     tags: [Style Guide]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Style guide pattern updated
- *   delete:
- *     summary: Delete style guide pattern
- *     tags: [Style Guide]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Style guide pattern deleted
- */
-
-/**
- * @swagger
- * /state:
- *   get:
- *     summary: Get all state management configurations
- *     tags: [State Management]
- *     responses:
- *       200:
- *         description: List of state management configurations
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/StateManagement'
- *   post:
- *     summary: Create state management configuration
- *     tags: [State Management]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/StateManagement'
- *     responses:
- *       201:
- *         description: State management configuration created
- * /state/{id}:
- *   get:
- *     summary: Get state management configuration by ID
- *     tags: [State Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: State management configuration details
- *   put:
- *     summary: Update state management configuration
- *     tags: [State Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: State management configuration updated
- *   delete:
- *     summary: Delete state management configuration
- *     tags: [State Management]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: State management configuration deleted
- */
-
-/**
- * @swagger
- * /hooks:
- *   get:
- *     summary: Get all custom hooks
- *     tags: [Custom Hooks]
- *     responses:
- *       200:
- *         description: List of custom hooks
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CustomHook'
- *   post:
- *     summary: Create custom hook
- *     tags: [Custom Hooks]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CustomHook'
- *     responses:
- *       201:
- *         description: Custom hook created
- * /hooks/{id}:
- *   get:
- *     summary: Get custom hook by ID
- *     tags: [Custom Hooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Custom hook details
- *   put:
- *     summary: Update custom hook
- *     tags: [Custom Hooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Custom hook updated
- *   delete:
- *     summary: Delete custom hook
- *     tags: [Custom Hooks]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Custom hook deleted
- */
-
-/**
- * @swagger
- * /conventions:
- *   get:
- *     summary: Get all code conventions
- *     tags: [Code Conventions]
- *     responses:
- *       200:
- *         description: List of code conventions
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Convention'
- *   post:
- *     summary: Create code convention
- *     tags: [Code Conventions]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Convention'
- *     responses:
- *       201:
- *         description: Code convention created
- * /conventions/{id}:
- *   get:
- *     summary: Get code convention by ID
- *     tags: [Code Conventions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Code convention details
- *   put:
- *     summary: Update code convention
- *     tags: [Code Conventions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Code convention updated
- *   delete:
- *     summary: Delete code convention
- *     tags: [Code Conventions]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Code convention deleted
- */
-
-createCRUDRoutes('components', 'components');
-createCRUDRoutes('apis', 'apis');
-createCRUDRoutes('environment', 'environment');
-createCRUDRoutes('style-guide', 'style-guide');
-createCRUDRoutes('state', 'state');
-createCRUDRoutes('hooks', 'hooks');
-createCRUDRoutes('conventions', 'conventions');
-
-app.listen(PORT, () => {
-  console.log(`MCP Server running on http://localhost:${PORT}`);
-  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
-});
-
-module.exports = app;
+const server = new ComponentsServer();
+server.run().catch(console.error);
