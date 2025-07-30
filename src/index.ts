@@ -3,7 +3,7 @@ import cors from 'cors';
 import componentsRouter from './routes/components';
 import apisRouter from './routes/apis';
 import environmentRouter from './routes/environment';
-import stylingRouter from './routes/styling';
+import styleGuideRouter from './routes/styleGuide';
 import stateManagementRouter from './routes/stateManagement';
 import customHooksRouter from './routes/customHooks';
 import codeConventionsRouter from './routes/codeConventions';
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use('/components', componentsRouter);
 app.use('/apis', apisRouter);
 app.use('/environment', environmentRouter);
-app.use('/styling', stylingRouter);
+app.use('/style-guide', styleGuideRouter);
 app.use('/state', stateManagementRouter);
 app.use('/hooks', customHooksRouter);
 app.use('/conventions', codeConventionsRouter);
@@ -50,11 +50,11 @@ app.get('/', (req, res) => {
         update: '/environment/:id (PUT)',
         delete: '/environment/:id (DELETE)',
       },
-      styling: {
-        getAll: '/styling (GET)',
-        create: '/styling (POST)',
-        update: '/styling/:id (PUT)',
-        delete: '/styling/:id (DELETE)',
+      styleGuide: {
+        getAll: '/style-guide (GET)',
+        create: '/style-guide (POST)',
+        update: '/style-guide/:id (PUT)',
+        delete: '/style-guide/:id (DELETE)',
       },
       stateManagement: {
         getAll: '/state (GET)',

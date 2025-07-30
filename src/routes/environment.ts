@@ -32,7 +32,8 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const db: DB = await readDB();
-    res.json(db.environmentVars);
+    const simplifiedEnvVars = db.environmentVars.map(({ id, name }) => ({ id, name }));
+    res.json(simplifiedEnvVars);
   } catch (error) {
     res.status(500).json({ message: 'Error reading environment variables', error });
   }

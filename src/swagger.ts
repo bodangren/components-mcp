@@ -38,32 +38,160 @@ const options = {
           },
           required: ['id', 'name', 'description', 'isPublic'],
         },
-        IStyling: {
+        APISummary: {
           type: 'object',
           properties: {
             id: {
               type: 'string',
-              description: 'The unique identifier for the styling configuration',
+              description: 'The unique identifier for the API',
             },
-            solution: {
+            name: {
               type: 'string',
-              description: 'The styling solution used (e.g., Tailwind CSS, CSS Modules)',
+              description: 'The name of the API',
             },
-            themePath: {
+            description: {
               type: 'string',
-              description: 'The path to the theme file',
-            },
-            globalStylesPath: {
-              type: 'string',
-              description: 'The path to the global styles file',
-            },
-            conventions: {
-              type: 'string',
-              description: 'Description of styling conventions',
+              description: 'A brief description of the API',
             },
           },
-          required: ['id', 'solution', 'themePath', 'globalStylesPath', 'conventions'],
+          required: ['id', 'name', 'description'],
         },
+        API: {
+          type: 'object',
+          required: [
+            'id',
+            'name',
+            'description',
+            'endpoint',
+            'method',
+            'parameters',
+            'requestBody',
+            'responseBody',
+          ],
+          properties: {
+            id: {
+              type: 'string',
+              description: 'The auto-generated ID of the API',
+            },
+            name: {
+              type: 'string',
+              description: 'The name of the API',
+            },
+            description: {
+              type: 'string',
+              description: 'The description of the API',
+            },
+            endpoint: {
+              type: 'string',
+              description: 'The API endpoint URL',
+            },
+            method: {
+              type: 'string',
+              description: 'The HTTP method (e.g., GET, POST)',
+            },
+            parameters: {
+              type: 'string',
+              description: 'Description of API parameters',
+            },
+            requestBody: {
+              type: 'string',
+              description: 'Description of the request body',
+            },
+            responseBody: {
+              type: 'string',
+              description: 'Description of the response body',
+            },
+          },
+          example: {
+            id: 'd5fE_asz',
+            name: 'Get Users',
+            description: 'Retrieves a list of users.',
+            endpoint: '/api/users',
+            method: 'GET',
+            parameters: 'None',
+            requestBody: 'None',
+            responseBody: 'Array of user objects',
+          },
+        },
+        APIInput: {
+          type: 'object',
+          required: [
+            'name',
+            'description',
+            'endpoint',
+            'method',
+            'parameters',
+            'requestBody',
+            'responseBody',
+          ],
+          properties: {
+            name: {
+              type: 'string',
+              description: 'The name of the API',
+            },
+            description: {
+              type: 'string',
+              description: 'The description of the API',
+            },
+            endpoint: {
+              type: 'string',
+              description: 'The API endpoint URL',
+            },
+            method: {
+              type: 'string',
+              description: 'The HTTP method (e.g., GET, POST)',
+            },
+            parameters: {
+              type: 'string',
+              description: 'Description of API parameters',
+            },
+            requestBody: {
+              type: 'string',
+              description: 'Description of the request body',
+            },
+            responseBody: {
+              type: 'string',
+              description: 'Description of the response body',
+            },
+          },
+          example: {
+            name: 'Create User',
+            description: 'Creates a new user.',
+            endpoint: '/api/users',
+            method: 'POST',
+            parameters: 'User object',
+            requestBody: 'User data in JSON format',
+            responseBody: 'Created user object',
+          },
+        },
+
+        IStyleGuide: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'The unique identifier for the style guide entry',
+            },
+            element: {
+              type: 'string',
+              description: 'The UI element being styled (e.g., Primary Button, Form Input with Error)',
+            },
+            description: {
+              type: 'string',
+              description: 'A description of when and how to use this style',
+            },
+            className: {
+              type: 'string',
+              description: 'The Tailwind CSS classes for this style',
+            },
+            usageExample: {
+              type: 'string',
+              description: 'An HTML usage example for this style',
+            },
+          },
+          required: ['id', 'element', 'description', 'className', 'usageExample'],
+        },
+
         IStateManagement: {
           type: 'object',
           properties: {

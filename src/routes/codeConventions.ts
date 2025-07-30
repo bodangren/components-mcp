@@ -32,7 +32,8 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const db: DB = await readDB();
-    res.json(db.codeConventions);
+    const simplifiedConventions = db.codeConventions.map(({ id, rule }) => ({ id, rule }));
+    res.json(simplifiedConventions);
   } catch (error) {
     res.status(500).json({ message: 'Error reading code conventions', error });
   }

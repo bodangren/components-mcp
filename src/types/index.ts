@@ -26,12 +26,12 @@ export interface IEnvironmentVar {
   isPublic: boolean;
 }
 
-export interface IStyling {
+export interface IStyleGuide {
   id: string;
-  solution: string;
-  themePath: string;
-  globalStylesPath: string;
-  conventions: string;
+  element: string;
+  description: string;
+  className: string;
+  usageExample: string;
 }
 
 export interface IStateManagement {
@@ -59,7 +59,7 @@ export interface DB {
   components: Component[];
   apis: API[];
   environmentVars: IEnvironmentVar[];
-  styling: IStyling[];
+  styleGuide: IStyleGuide[];
   stateManagement: IStateManagement[];
   customHooks: ICustomHook[];
   codeConventions: ICodeConvention[];

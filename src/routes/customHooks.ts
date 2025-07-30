@@ -32,7 +32,8 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const db: DB = await readDB();
-    res.json(db.customHooks);
+    const simplifiedHooks = db.customHooks.map(({ id, name }) => ({ id, name }));
+    res.json(simplifiedHooks);
   } catch (error) {
     res.status(500).json({ message: 'Error reading custom hooks', error });
   }

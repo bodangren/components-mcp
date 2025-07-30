@@ -4,96 +4,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { API, DB } from '../types';
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     API:
- *       type: object
- *       required:
- *         - id
- *         - name
- *         - description
- *         - endpoint
- *         - method
- *         - parameters
- *         - requestBody
- *         - responseBody
- *       properties:
- *         id:
- *           type: string
- *           description: The auto-generated ID of the API
- *         name:
- *           type: string
- *           description: The name of the API
- *         description:
- *           type: string
- *           description: The description of the API
- *         endpoint:
- *           type: string
- *           description: The API endpoint URL
- *         method:
- *           type: string
- *           description: The HTTP method (e.g., GET, POST)
- *         parameters:
- *           type: string
- *           description: Description of API parameters
- *         requestBody:
- *           type: string
- *           description: Description of the request body
- *         responseBody:
- *           type: string
- *           description: Description of the response body
- *       example:
- *         id: d5fE_asz
- *         name: Get Users
- *         description: Retrieves a list of users.
- *         endpoint: /api/users
- *         method: GET
- *         parameters: None
- *         requestBody: None
- *         responseBody: Array of user objects
- *     APIInput:
- *       type: object
- *       required:
- *         - name
- *         - description
- *         - endpoint
- *         - method
- *         - parameters
- *         - requestBody
- *         - responseBody
- *       properties:
- *         name:
- *           type: string
- *           description: The name of the API
- *         description:
- *           type: string
- *           description: The description of the API
- *         endpoint:
- *           type: string
- *           description: The API endpoint URL
- *         method:
- *           type: string
- *           description: The HTTP method (e.g., GET, POST)
- *         parameters:
- *           type: string
- *           description: Description of API parameters
- *         requestBody:
- *           type: string
- *           description: Description of the request body
- *         responseBody:
- *           type: string
- *           description: Description of the response body
- *       example:
- *         name: Create User
- *         description: Creates a new user.
- *         endpoint: /api/users
- *         method: POST
- *         parameters: User object
- *         requestBody: User data in JSON format
- *         responseBody: Created user object
- */
+
 
 const router = Router();
 const dbPath = path.resolve(__dirname, '../../data/db.json');
@@ -121,11 +32,12 @@ const writeData = (data: DB) => {
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/API'
+ *                 $ref: '#/components/schemas/APISummary'
  */
 router.get('/', (req: Request, res: Response) => {
   const data = readData();
-  res.json(data.apis);
+  const simplifiedApis = data.apis.map(({ id, name, description }) => ({ id, name, description }));
+  res.json(simplifiedApis);
 });
 
 /**

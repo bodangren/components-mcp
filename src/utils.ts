@@ -15,7 +15,7 @@ export async function readDB(): Promise<DB> {
       components: [],
       apis: [],
       environmentVars: [],
-      styling: [],
+      styleGuide: [],
       stateManagement: [],
       customHooks: [],
       codeConventions: [],

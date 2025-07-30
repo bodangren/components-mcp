@@ -32,7 +32,8 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const db: DB = await readDB();
-    res.json(db.stateManagement);
+    const simplifiedStateManagement = db.stateManagement.map(({ id, library }) => ({ id, library }));
+    res.json(simplifiedStateManagement);
   } catch (error) {
     res.status(500).json({ message: 'Error reading state management configurations', error });
   }
