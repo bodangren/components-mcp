@@ -1,6 +1,6 @@
-# MCP Server for Next.js Development
+# Knowledge-Base Server for the "[Your Project Name]" Next.js Project
 
-This project provides a centralized Micro-Component Platform (MCP) server designed to store and retrieve essential information for Next.js development. This includes details about available components, sample code snippets, and API specifications.
+This project is a dedicated knowledge-base server. Its primary purpose is to provide a persistent, queryable memory for an LLM agent (e.g., Gemini) that assists with the development of our main Next.js project. It stores canonical information about the project's components and APIs, allowing the LLM to access up-to-date details without having to parse the entire codebase repeatedly. This includes details about available components, sample code snippets, and API specifications.
 
 ## Features
 
@@ -76,3 +76,12 @@ The server will run on `http://localhost:3001`.
 ## Data Storage
 
 API data is stored in `data/db.json`. This is a simple JSON file for easy local management. For production environments, consider migrating to a more robust database solution.
+
+## Purpose and AI-Assisted Workflow
+
+This server is not intended for direct human interaction in a production environment. Instead, it runs locally during development and serves as the single source of truth for our project's key architectural pieces.
+
+The intended workflow is:
+1.  The developer interacts with an LLM agent to ask questions or issue commands related to the main Next.js project.
+2.  The LLM agent queries this server's API (`/apis`, `/components`) to retrieve accurate, structured information.
+3.  When a developer asks the LLM to create or modify a component or API, the LLM will use this server's `POST` or `PUT` endpoints to update the knowledge base accordingly.

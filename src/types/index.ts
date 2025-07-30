@@ -2,7 +2,7 @@ export interface Component {
   id: string;
   name: string;
   description: string;
-  snippet: string;
+  snippet: string; // Filesystem location of the component
   category: string;
   dependencies: string[];
   usage: string;
@@ -19,7 +19,49 @@ export interface API {
   responseBody: string;
 }
 
+export interface IEnvironmentVar {
+  id: string;
+  name: string;
+  description: string;
+  isPublic: boolean;
+}
+
+export interface IStyling {
+  id: string;
+  solution: string;
+  themePath: string;
+  globalStylesPath: string;
+  conventions: string;
+}
+
+export interface IStateManagement {
+  id: string;
+  library: string;
+  storeDirectory: string;
+  usagePattern: string;
+}
+
+export interface ICustomHook {
+  id: string;
+  name: string;
+  filePath: string;
+  description: string;
+  usage: string;
+}
+
+export interface ICodeConvention {
+  id: string;
+  rule: string;
+  description: string;
+}
+
 export interface DB {
   components: Component[];
   apis: API[];
+  environmentVars: IEnvironmentVar[];
+  styling: IStyling[];
+  stateManagement: IStateManagement[];
+  customHooks: ICustomHook[];
+  codeConventions: ICodeConvention[];
 }
+

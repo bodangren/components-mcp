@@ -21,5 +21,10 @@
       "requestBody": "None",
       "responseBody": "Array of user objects"
     }
-  ]
+  ],
+  "environmentVars": [],
+  "styling": [],
+  "stateManagement": [],
+  "customHooks": [],
+  "codeConventions": []
 }

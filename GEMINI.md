@@ -4,7 +4,7 @@ This file provides specific instructions and context for the Gemini agent intera
 
 ## Project Overview
 
-This is a Node.js/Express server with TypeScript, serving as a Micro-Component Platform (MCP) for Next.js development resources. It stores data in `data/db.json`.
+This server is **your primary knowledge base** and long-term memory for our Next.js project. Instead of parsing the file system to understand the project's structure, you must query the API endpoints on this server (`http://localhost:3001`). This server is the single source of truth for information about the project's components and APIs.
 
 ## Key Files and Directories
 
@@ -36,4 +36,14 @@ This is a Node.js/Express server with TypeScript, serving as a Micro-Component P
 - **Adding/Modifying Endpoints**: Update relevant files in `src/routes/` and `src/types/`.
 - **Updating Data Models**: Modify `src/types/index.ts` and `data/db.json`.
 - **Testing**: Use `curl` commands to verify API functionality.
+
+## Your Core Responsibilities
+
+Your main role is to keep this knowledge base synchronized with the main Next.js project.
+
+*   **Query, Don't Scan:** When a user asks about available components or APIs, you *must* query the `GET /components` or `GET /apis` endpoints. Do not rely on file system scans.
+*   **Update After Changes:** When you assist in creating or modifying a component or API in the main project, you *must* immediately update this knowledge base.
+    *   For new items, use `POST /components` or `POST /apis`.
+    *   For modifications, use `PUT /components/:id` or `PUT /apis/:id`.
+*   **Maintain Data Integrity:** The data you store here is critical for your future responses. Ensure it is accurate and follows the established TypeScript interfaces defined in `src/types/index.ts`.
 
