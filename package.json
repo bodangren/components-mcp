@@ -1,8 +1,27 @@
 {
-  "name": "components-mcp",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@bodangren/components-mcp",
+  "version": "1.0.1",
+  "description": "A collection of reusable components and utilities.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "data/db.json"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bodangren/components-mcp.git"
+  },
+  "keywords": [
+    "components",
+    "utilities",
+    "typescript",
+    "express",
+    "swagger"
+  ],
+  "bin": {
+    "components-mcp": "./bin/start-server.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
