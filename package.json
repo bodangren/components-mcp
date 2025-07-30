@@ -1,6 +1,6 @@
 {
   "name": "@bodangren/components-mcp",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A collection of reusable components and utilities.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
